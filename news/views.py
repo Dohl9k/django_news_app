@@ -1,15 +1,12 @@
 import requests
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
-from bs4 import BeautifulSoup as BSoup
-from news.models import Headline
 from django_news_app import settings
-
 
 def home(request):
     page = request.GET.get('page', 1)
     search = request.GET.get('search', None)
-
+    temp_img = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/BBC_News_2019.svg/300px-BBC_News_2019.svg.png'
     if search is None or search == "top":
         # get the top news
         url = "https://newsapi.org/v2/top-headlines?country={}&page={}&apiKey={}".format(
@@ -38,7 +35,7 @@ def home(request):
             "description": "" if i["description"] is None else i["description"],
             "url": i["url"],
             "image": temp_img if i["urlToImage"] is None else i["urlToImage"],
-            "published": i["publishedAt"]
+            "publishedAt": i["publishedAt"]
         })
     # send the news feed to template in context
     return render(request, 'news/index.html', context=context)
@@ -48,23 +45,24 @@ def loadcontent(request):
     try:
         page = request.GET.get('page', 1)
         search = request.GET.get('search', None)
+        temp_img = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/BBC_News_2019.svg/300px-BBC_News_2019.svg.png'
         # url = "https://newsapi.org/v2/everything?q={}&sortBy={}&page={}&apiKey={}".format(
         #     "Technology","popularity",page,settings.APIKEY
         # )
-        if search is None or search=="top":
+        if search is None or search == "top":
             url = "https://newsapi.org/v2/top-headlines?country={}&page={}&apiKey={}".format(
-                "us",page,settings.APIKEY
+                "us", page, settings.APIKEY
             )
         else:
             url = "https://newsapi.org/v2/everything?q={}&sortBy={}&page={}&apiKey={}".format(
-                search,"popularity",page,settings.APIKEY
+                search, "popularity", page, settings.APIKEY
             )
-        print("url:",url)
+        print("url:", url)
         r = requests.get(url=url)
 
         data = r.json()
         if data["status"] != "ok":
-            return JsonResponse({"success":False})
+            return JsonResponse({"success": False})
         data = data["articles"]
         context = {
             "success": True,
@@ -74,7 +72,7 @@ def loadcontent(request):
         for i in data:
             context["data"].append({
                 "title": i["title"],
-                "description":  "" if i["description"] is None else i["description"],
+                "description": "" if i["description"] is None else i["description"],
                 "url": i["url"],
                 "image": temp_img if i["urlToImage"] is None else i["urlToImage"],
                 "publishedat": i["publishedAt"]
@@ -82,4 +80,4 @@ def loadcontent(request):
 
         return JsonResponse(context)
     except Exception as e:
-        return JsonResponse({"success":False})
+        return JsonResponse({"success": False})
